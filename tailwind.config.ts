@@ -7,8 +7,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Geist', ...defaultTheme.fontFamily.sans],
-        mono: ['Geist Mono', ...defaultTheme.fontFamily.mono],
+        sans: ['Miracode', ...defaultTheme.fontFamily.sans],
+        mono: ['Monocraft', ...defaultTheme.fontFamily.mono],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -39,6 +39,21 @@ const config: Config = {
         },
         border: 'hsl(var(--border))',
         ring: 'hsl(var(--ring))',
+      },
+      typography: {
+        neutral: {
+          css: {
+            '--tw-prose-body': 'var(--foreground)',
+            '--tw-prose-links': 'hsl(99, 7%, 25%)',
+            '--tw-prose-code': 'hsl(99, 7%, 25%)',
+            '--tw-prose-headings': 'var(--foreground)',
+          },
+        },
+        invert: {
+          css: {
+            '--tw-prose-body': 'var(--foreground)',
+          },
+        },
       },
     },
   },
