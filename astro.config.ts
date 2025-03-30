@@ -15,6 +15,7 @@ import rehypePrettyCode from 'rehype-pretty-code'
 import remarkEmoji from 'remark-emoji'
 import remarkMath from 'remark-math'
 import remarkToc from 'remark-toc'
+import remarkGfm from 'remark-gfm'
 import sectionize from '@hbsnow/rehype-sectionize'
 
 import icon from 'astro-icon'
@@ -62,7 +63,7 @@ export default defineConfig({
         },
       ],
     ],
-    remarkPlugins: [remarkToc, remarkMath, remarkEmoji],
+    remarkPlugins: [remarkGfm, remarkToc, remarkMath, remarkEmoji],
   },
   server: {
     port: 1234,
