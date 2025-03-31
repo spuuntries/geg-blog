@@ -16,9 +16,12 @@ import remarkEmoji from 'remark-emoji'
 import remarkMath from 'remark-math'
 import remarkToc from 'remark-toc'
 import remarkGfm from 'remark-gfm'
+import rehypeCitation from 'rehype-citation'
 import sectionize from '@hbsnow/rehype-sectionize'
-
 import icon from 'astro-icon'
+import path from 'path'
+
+const root = process.cwd()
 
 // https://astro.build/config
 export default defineConfig({
@@ -61,6 +64,10 @@ export default defineConfig({
             }),
           ],
         },
+      ],
+      [
+        rehypeCitation,
+        { path: path.join(root, 'src', 'content', 'bibs'), showTooltips: true },
       ],
     ],
     remarkPlugins: [remarkGfm, remarkToc, remarkMath, remarkEmoji],
