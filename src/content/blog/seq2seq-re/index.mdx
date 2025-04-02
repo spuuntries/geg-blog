@@ -125,7 +125,7 @@ So, the problem? Data. Good data, specifically. I recently did some research on 
 The reason why Indonesian was used here, was that Indonesian, specifically day-to-day, non-formal Indonesian, is often underrepresented, especially in smaller models. So our focus was to train this model to know more about speaking Indonesian, and because we couldn't really burn *that* much money as to do a full parameter tune, we ran it by a LoRA+ optimizer.
 
 The results?
-![A table of metrics, showing the chosed finetuned model to be higher than the baseline, at BLEU score of 52.35 ± 3.72, ROUGE-1 of 0.062, ROUGE-2 of 0.023, ROUGE-L of 0.056 ± 0.00075, and Weighted F1 of 0.438 ± 0.002.](./fptable.png)
+![A table of metrics, showing the chosen finetuned model to be higher than the baseline, at BLEU score of 52.35 ± 3.72, ROUGE-1 of 0.062, ROUGE-2 of 0.023, ROUGE-L of 0.056 ± 0.00075, and Weighted F1 of 0.438 ± 0.002.](./fptable.png)
 It worked! For the most part. Although, as you can see, there's definitely a lot to be desired here, the forgetting incurred by the tune (see that f1 decline, we used cosine similarity to measure the semantic "correctness" against the ref text) really impacted the resulting model in practical use.
 
 The major factors we identified in this, was that, again, good data and sampling. Having more data does not necessarily say that you'll get better results. 
