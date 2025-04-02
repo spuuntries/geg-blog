@@ -41,6 +41,9 @@ const config: Config = {
         ring: 'hsl(var(--ring))',
       },
       typography: {
+        DEFAULT: {
+          css: { 'font-size': '0.95rem' },
+        },
         neutral: {
           css: {
             '--tw-prose-body': 'var(--foreground)',

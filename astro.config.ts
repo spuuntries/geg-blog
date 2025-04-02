@@ -17,6 +17,7 @@ import remarkMath from 'remark-math'
 import remarkToc from 'remark-toc'
 import remarkGfm from 'remark-gfm'
 import rehypeCitation from 'rehype-citation'
+import rehypeFigure from '@microflash/rehype-figure'
 import sectionize from '@hbsnow/rehype-sectionize'
 import icon from 'astro-icon'
 import path from 'path'
@@ -47,6 +48,7 @@ export default defineConfig({
       ],
       rehypeHeadingIds,
       rehypeKatex,
+      rehypeFigure,
       sectionize,
       [
         rehypePrettyCode,
@@ -67,7 +69,11 @@ export default defineConfig({
       ],
       [
         rehypeCitation,
-        { path: path.join(root, 'src', 'content', 'bibs'), showTooltips: true },
+        {
+          path: path.join(root, 'src', 'content', 'bibs'),
+          showTooltips: true,
+          csl: path.join('ieee.csl'),
+        },
       ],
     ],
     remarkPlugins: [remarkGfm, remarkToc, remarkMath, remarkEmoji],

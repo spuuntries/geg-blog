@@ -18,6 +18,8 @@ function buildToc(headings: Heading[]): Heading[] {
   const stack: Heading[] = []
 
   headings.forEach((h) => {
+    if (h.text === "Footnotes") return // Skip footnotes
+
     const heading = { ...h, subheadings: [] }
 
     while (stack.length > 0 && stack[stack.length - 1].depth >= heading.depth) {
