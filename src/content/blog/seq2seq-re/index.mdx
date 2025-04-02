@@ -430,6 +430,23 @@ In order to preserve that contextuality of feature space at all layers, we can a
 
 **2.) LLM Engineer uwu:** If you've ever done a retrieval mechanism for LLMs, it's basically that. You don't want your LLM to hallucinate, so you fetch the context and inject it into the LLM's most-attended-to positions so it can reference it more directly. So you can think of this mechanism as a sort of RAG, but directly on latent operations.
 
+And so, take an encoder off an, either encoder-only, or bidirectional encoder model, so, BERT and friends, shove into a decoder-only's decoder!
+
+![Frankenstein model, basically shove a crossattn layer between the encoder and the decoder](./frank.svg)
+
+***WHY***, would you ever do this? Well, my pov is that encoder-focused models tend to produce very rich representations. This is why we see them used in embedding tasks, their latent spaces are much richer compared to decoders. Decoders, on the other hand, excel at being more "explicit" in how they articulate information.
+
+...Look at it like this, since encoder-focused models are essentially tight bottlenecks, they have to work around a lot of the limitations imposed by the pigeonhole principle, as a result, their latents are *very* efficient at compressing information at relatively high fidelity.
+
+While on decoders, since any kind of latent is otherwise gonna contribute into the output anyway, not much focus is put on making the representation as efficient anymore, since the bottleneck isn't... really there, anymore. The output is decoupled from the input, it's outputting prob logits for a sequence of embeddings, i.e., so it's not embeddings for embeddings anymore.
+
+Anyway, practically, I'd imagine we'll have to shove a projection layer into this, since the latents probably won't match up lol. If you've kept up with multimodal LLMs lately, you'd know that this has become a common approach as of late, one of the main architectures which introduced this as *the* approach afaik was LLaVA [@liu2023visualinstructiontuning],
+![LLaVA's projection layer design](./proj.png)
+which was to project the embeddings of a visual encoder, CLIP, into the latent of an LLM, Llama.
+
+![The frankenstein design, just a projection layer first](./frankp.svg)
+Intuitively, this should work out fine, but I haven't really tried anything like this out, since, in multimodals, this sorta works out (since otherwise you'll have to train both modalities in parallel, which is *insanely* expensive computationally), but in the same modality, ngl I haven't really seen anyone work on this, at least, not for translation tasks, maybe I need to dig deeper.
+
 # results :bruh:
 
 SOOOOOOOOO for this post, as a starter, let's just run it by something pretty straightforward and intuitive, a LoRA on some encoder-decoder seq2seq. Here, I took three runs to highlight, mostly cuz the other ones were kinda just tweaking and fixing, with `codet5-base` and `codet5-small`.
