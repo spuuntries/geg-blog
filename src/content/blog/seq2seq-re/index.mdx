@@ -345,7 +345,7 @@ The idea here is that, the encoder runs the input into latent space, *then* via 
 
 See that cross attn? This thing
 ![Cross attention mechanism in an encoder-decoder transformer](./crossattn.svg)
-When we do it this way, the decoder, while still doing things autoregressively, can attend to the entire input sequece as per the encoder's latent. 
+When we do it this way, the decoder, while still doing things autoregressively, can attend to the entire input sequence as per the encoder's latent. 
 
 This is good, because, well, intuitively, you want the next outputs of a translation model to both take in the intial translated sequence *and* the already-generated output sequence. 
 
@@ -379,7 +379,7 @@ This means that the resulting computations are, *technically*, a slight bit ligh
 
 Issue with this? Well, so far, I don't really see much. One problem with it is the assumption that there's this backward dependency pattern in the structuring of the language, which *can* be an issue when we're doing causal language modelling, but since we're doing translation, it ***can*** be assumed that all the necessary context will always already be in the context window already digested.
 
-**c.) Frankenstein:** This is where we get a bit, mmm, handwavy, but I am hoping to try this out because– well— mmm, hear me out lol.
+***c.) Frankenstein:*** This is where we get a bit, mmm, handwavy, but I am hoping to try this out because– well— mmm, hear me out lol.
 
 Let's see, when we're talking abt why the decoder-only approach sucks is that, it inherently assumes that the translated output cannot ever depend "forwardly", since, well, as far as the model's concerned, it's only continuing to shit out what it's alrd shat out, that is, our input.
 ```md
@@ -409,7 +409,7 @@ Tokens:      ["I", "love", "femboys", "->", "J'", "aime", "les", "femboys"]
 **This is different in decoder-only models**, where, since the self-attn isn't as bad on encoder-decoders, there's been a lot of exploration on really scaling them up, you might have heard of some extending these models' ctx windows into the **millions of tokens** (!!!) range.
 
 If you've ever played around with these models tho, you'd know that there's a big issue with them, as your window gets bigger, the attention gets diluted. This is why we have that [needle in a haystack](https://github.com/gkamradt/LLMTest_NeedleInAHaystack) (and all its derivatives) problem,  
-![Needle in a haystack bench on Claude 2.1 with it severely degrading at ~100k tokens with barely and recall at ~200k](./ndis.png)
+![Needle in a haystack bench on Claude 2.1 with it severely degrading at ~100k tokens with barely any recall at ~200k](./ndis.png)
 it shows that there's an inherent limitation when we assume that the entire window can be shoved into latent, the model begins to forget.
 
 Of course, there's been lots of improvements on this, Claude 3.5 Sonnet's already looks like this on their model card (self-reported by Anthropic, but imho they're pretty trustworthy)  
