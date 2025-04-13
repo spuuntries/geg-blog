@@ -36,24 +36,6 @@
 
 @layer base {
   :root {
-    --background: 140, 60%, 96%;
-    --foreground: 0, 48%, 21%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 80.1%;
-    --secondary-foreground: 0, 48%, 21%;
-    --muted: 0 0% 80.1%;
-    --muted-foreground: 99, 7%, 37%;
-    --accent: 0 0% 80.1%;
-    --accent-foreground: 0 0% 9%;
-    --additive: 112 50% 36%;
-    --additive-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-  }
-  .dark {
     --background: 0, 17%, 8%;
     --foreground: 122, 20%, 80%;
     --primary: 140, 60%, 96%;
@@ -79,12 +61,8 @@
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
     @apply bg-background text-foreground;
-
-    &.dark {
-      color-scheme: dark;
-    }
 
     ::-webkit-scrollbar-corner {
       @apply bg-transparent;
