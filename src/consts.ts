@@ -16,7 +16,7 @@ export const SITE: Site = {
   TITLE: "kek's thoughts",
   DESCRIPTION: 'A space where kek keeps their thoughts. ☁',
   EMAIL: 'kek@spuun.art',
-  NUM_POSTS_ON_HOMEPAGE: 2,
+  NUM_POSTS_ON_HOMEPAGE: 3,
   POSTS_PER_PAGE: 3,
   SITEURL: 'https://spuun.art',
 }
