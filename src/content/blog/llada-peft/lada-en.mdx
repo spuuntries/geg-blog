@@ -14,6 +14,8 @@ This project was a joint-effort between me (spuun) and my team (wew, po) on the 
 
 Check out the Indonesian version [**here**](./lada-id), it's written by my teammates, wew and po, so you're gona see a bit of a discrepancy in the writing styles (and maybe some materials, I haven't completely done the fact-checking ehehe), you can kinda see my post as the "canonical", whilst the other one is a "distilled" version off my teammates' understanding.
 
+Check out our runs at this [documentation notebook](https://github.com/spuuntries/geg-blog/tree/main/src/content/blog/llada-peft/notebook%20docs).
+
 # **wat, llms?**
 
 > Yeah no, there's no way u dunno abt generative LLMs at this point man, u been living under a rock?
@@ -124,7 +126,7 @@ If we were to do the same computation up there in the quoted bits, this'd work f
 <figcaption>Btw whipped up a demo for the above.</figcaption>
 </figure>
 
-How would the model create a connection from "he" to "Astolfo" here? The coreference resolution can only go backwards, not forwards, and therefore, unless the model has inherently assumed a "he" to be there (i.e., statistically-significant), there's no practical reason for there to be a possibility of a stochastic prediction to fall on "he", if anything the token of "Astolfo", a nominal subject, will basically always precede its replacement counterpart. This is where that left-to-right "causality" breaks down. Turns out, causality *can* go forward.
+How would the model create a connection from "he" to "Astolfo" here? The coreference resolution can only go backwards, not forwards, and therefore, unless the model has inherently assumed a "he" to be there (i.e., statistically-significant), there's no practical reason for there to be a possibility of a stochastic prediction to fall on "he". If anything, the token of "Astolfo", a nominal subject, will basically always precede its replacement counterpart. This is where that left-to-right "causality" breaks down. Turns out, causality *can* go forward.
 
 Of course, this assumes that you can't for whatever reason move the forward relation *into* the "digested" window, effectively folding and collapsing the forward dependency backwards, but that's beside the point, for cases which *do* demand such a frame, the autoregressive approach will, indeed, break down.
 
@@ -276,6 +278,8 @@ Yes, LoRA. Wtf is LoRA? LoRA stands for `Low-Rank Adaptation` [@hu2022lora], whi
 
 (There are also some assumptions there, since we're working with self-attn, such it's dxd for the $W$, it'd generalize to a dxk matrix, but the gist of it is in there fwiw.)
 
+Here, LoRA can be used to target an approx change on any component really, but here we took the simplest    QKV target on their respective projection layers.
+
 ## LoRA+
 
 Same deal, I need to collect this by tonight bruh :kms: so we're gonna copy off the notebook again,
@@ -394,8 +398,12 @@ This is also to follow the SFT schema provided by the LlaDA authors, where the "
 In order to evaluate the performance of the model before and after the application of the adapters, we used 4 metrics, ROUGE, BLEU, METEOR, and F1.
 
 Here:
-1. ROUGE is used to evaluate the recall capabilities of the model, this is measured via the overlap between the reference and the generated texts. Wud be most useful wen we wanna consider using this for RAG, for example.
-2. BLEU is used to determine the quality of the cross-lingual transfer, 
+1. ROUGE is used to evaluate the recall capabilities of the model, this is measured via the overlap between the reference and the generated texts. Wud be most useful wen we wanna consider using this for RAG, for example. ROUGE has three different types, `-1`, `-2` and `-L` depending on what's used to determine the overlap.
+2. BLEU is used to determine the quality of the cross-lingual transfer, this is based on the gram overlap and the brevity of the generated text. This is to understand how well the grams now overlap within the vocab understanding of the model.
+3. METEOR is really just a modernized version of BLEU, gets a harmonic mean of precision and recall of the gram overlap, so it's like a compromise between the other two up there.
+4. F1 here is calculated via embedding w/ `all-MiniLM-L6-v2`, where for something to be determined to be true, we grab the cosine dist from the reference's embedding for the generated text, and if it passes the threshold of 0.5, it's determined to be true.
+
+For all of them, we assumed a 0.7 temperature on the sampling over each probdist, and 32 timestep diffusion.
 
 # results n discussion akjsdbaskjdbasjkd :skull:
 
@@ -422,21 +430,183 @@ Though, when we look more closely to the data here, methinks we have quite a goo
 
 ![Percentage improvement for each iteration shows some... weird figures.](./prcent.png)
 
-See that high improvement from adapter 4 in basically all the metrics, but literally going to the negative in ROUGE-2? Yeah that's weird.
+See that high improvement from adapter 4 in basically all the metrics, but literally going to the negative in ROUGE-2? Yeah, that's weird.
 
-In practice, we see that the model highly deviates from coherency, and barely forms any coherent outputs. We believe that due to the N-gram nature of many of these metrics, they've been "fooled" by the model to interpret its outputs as better than what they actually are.
+In practice, we see that this specific adapter highly deviates from coherency, and barely forms any coherent outputs. We believe that due to the gram-overlap nature of many of these metrics, they've been "fooled" by the model to interpret its outputs as better than what they actually are.
 
-Based on the above considerations, we pick out **adapter 1** and **adapter 5** as the two adapters which we believe performed the best with respect to its statistical deviance, the two does show 
+Anywho, let's go even closer, let's take a closer look at the metrics over at... ROUGE-1,
+
+![ROUGE-1 Violin](./rouge1-violin.png)
+![ROUGE-1 Bar](./rouge1-bar.png)
+
+Looking at the results here, the results show a pretty nice increase across the board when compared to the baseline. However, if you look closer here, the results aren't that great, we're getting barely any above `3e-2` of ROUGE measurement, and usually, a good ROUGE is *at least* some `4e-1`, so literally none of them achieved that, not even the baseline reached anywhere close lmao.
+
+In ROUGE-2, we can see that weird decline from adapter 4, 
+
+![Rouge-2 Bar](./rouge2-bar.png)
+![Rouge-2 Violin](./rouge2-violin.png)
+
+I believe one way of interpreting this loss is that, the increase in the size of the overlaps necessitated by the ROUGE-2 (bigrams) ended up "destroying" the model, as it really didn't have much overlap to begin with. 
+
+![Rouge-L Bar](./rougel-bar.png)
+![Rouge-L Violin](./rougel-violin.png)
+
+For LCS, the reason why it didn't suck, the LCS had pretty short LCSes as well, which resulted in a relatively low bar. I.e., in conclusion, *all* of the ROUGEs sucked lol.
+
+BLEU and METEOR was... interesting. Let's see...
+![BLEU Box](./bleu-box.png)
+
+Now, rn this may look okay, but let's look at the violin,
+
+![BLEU Violin](./bleu-violin.png)
+
+Observe how the violin for adapter 4 had basically no "mass"...? I.e., it's spread out thin, this means that the distribution of scores were distributed out "evenly", it's "uniform", it can be bad as it can be "good". This is not how it's supposed to work, if a model's good, you're gonna see that it clumps up somewhere in the y-axis.
+
+![METEOR Violin](./meteor-violin.png)
+
+METEOR, being a harmonic mean, is going to reflect what we've alrd seen above, it's just that the "clumping" here is caused by the harmonic being shifted upwards by the heavy "mass" in the ROUGE.
+
+F1-wise, this is where it gets kinda weird. We believe that this clump that we see in model 4 is for the most part really just caused by the embedding model not entirely knowing the domain itself. 
+
+![F1 Violin](./semanticf1-violin.png)
+
+This can be more visibly seen when we consider the cosine similarity of the adapters. Here, it's observed that adapter 4 had many outliers dipping into the negative, this is odd, because really, if the model worked out well and didn't "cheat" the embedding, we would see either outliers upwards, or at the very least cleaner and longer whiskers (as the distribution normalizes).
+
+![Cosine Box](./cosine-box.png)
+
+Based on the above considerations, we picked out **adapter 1** and **adapter 5** as the two adapters which we believe performed the best with respect to its statistical deviance, the two does show some higher level of stability in practical testing, and all in all they both stayed relatively coherent.
+
+Here are the results tabulated btw:  
+
+<div style="overflow: scroll; height: 400px">
+| Metric       | Model   | Base (mean ± std)   | Adapted (mean ± std)   |   Improvement | % Improvement   |
+|:-------------|:--------|:--------------------|:-----------------------|--------------:|:----------------|
+| rouge1       | model 1 | 0.0081 ± 0.0173     | 0.0316 ± 0.0431        |        0.0235 | 289.25%         |
+| rouge1       | model 2 | 0.0127 ± 0.0254     | 0.0261 ± 0.0353        |        0.0134 | 105.54%         |
+| rouge1       | model 3 | 0.0136 ± 0.0355     | 0.0269 ± 0.0381        |        0.0132 | 97.21%          |
+| rouge1       | model 4 | 0.0110 ± 0.0216     | 0.0437 ± 0.0253        |        0.0327 | 296.06%         |
+| rouge1       | model 5 | 0.0113 ± 0.0184     | 0.0382 ± 0.0608        |        0.0269 | 237.82%         |
+| rouge1       | model 6 | 0.0101 ± 0.0205     | 0.0361 ± 0.0489        |        0.026  | 256.57%         |
+| rouge1       | model 7 | 0.0158 ± 0.0285     | 0.0215 ± 0.0270        |        0.0057 | 35.73%          |
+| rouge1       | model 8 | 0.0116 ± 0.0266     | 0.0221 ± 0.0289        |        0.0105 | 90.75%          |
+| rouge1       | model 9 | 0.0075 ± 0.0157     | 0.0227 ± 0.0320        |        0.0152 | 203.87%         |
+| rouge2       | model 1 | 0.0002 ± 0.0015     | 0.0070 ± 0.0173        |        0.0069 | 4500.79%        |
+| rouge2       | model 2 | 0.0009 ± 0.0087     | 0.0062 ± 0.0165        |        0.0053 | 611.29%         |
+| rouge2       | model 3 | 0.0004 ± 0.0043     | 0.0060 ± 0.0177        |        0.0056 | 1308.32%        |
+| rouge2       | model 4 | 0.0008 ± 0.0036     | 0.0001 ± 0.0014        |       -0.0006 | -82.35%         |
+| rouge2       | model 5 | 0.0001 ± 0.0012     | 0.0108 ± 0.0295        |        0.0107 | 9236.19%        |
+| rouge2       | model 6 | 0.0004 ± 0.0035     | 0.0061 ± 0.0169        |        0.0057 | 1401.83%        |
+| rouge2       | model 7 | 0.0013 ± 0.0111     | 0.0020 ± 0.0078        |        0.0007 | 55.49%          |
+| rouge2       | model 8 | 0.0007 ± 0.0053     | 0.0017 ± 0.0086        |        0.001  | 156.15%         |
+| rouge2       | model 9 | 0.0006 ± 0.0045     | 0.0035 ± 0.0098        |        0.0029 | 490.91%         |
+| rougeL       | model 1 | 0.0078 ± 0.0162     | 0.0304 ± 0.0415        |        0.0226 | 289.26%         |
+| rougeL       | model 2 | 0.0121 ± 0.0246     | 0.0246 ± 0.0334        |        0.0125 | 103.00%         |
+| rougeL       | model 3 | 0.0130 ± 0.0343     | 0.0249 ± 0.0361        |        0.0119 | 91.69%          |
+| rougeL       | model 4 | 0.0110 ± 0.0216     | 0.0337 ± 0.0177        |        0.0228 | 207.89%         |
+| rougeL       | model 5 | 0.0105 ± 0.0169     | 0.0360 ± 0.0572        |        0.0255 | 242.60%         |
+| rougeL       | model 6 | 0.0098 ± 0.0197     | 0.0326 ± 0.0424        |        0.0228 | 233.21%         |
+| rougeL       | model 7 | 0.0149 ± 0.0255     | 0.0192 ± 0.0241        |        0.0043 | 28.90%          |
+| rougeL       | model 8 | 0.0109 ± 0.0256     | 0.0204 ± 0.0264        |        0.0096 | 87.64%          |
+| rougeL       | model 9 | 0.0073 ± 0.0153     | 0.0215 ± 0.0304        |        0.0142 | 193.51%         |
+| bleu_1       | model 1 | 0.0079 ± 0.0280     | 0.0311 ± 0.0404        |        0.0232 | 292.21%         |
+| bleu_1       | model 2 | 0.0097 ± 0.0288     | 0.0245 ± 0.0309        |        0.0148 | 152.42%         |
+| bleu_1       | model 3 | 0.0079 ± 0.0291     | 0.0269 ± 0.0390        |        0.019  | 241.79%         |
+| bleu_1       | model 4 | 0.0070 ± 0.0206     | 0.0774 ± 0.0463        |        0.0703 | 1000.13%        |
+| bleu_1       | model 5 | 0.0052 ± 0.0154     | 0.0372 ± 0.0564        |        0.032  | 612.72%         |
+| bleu_1       | model 6 | 0.0086 ± 0.0235     | 0.0332 ± 0.0430        |        0.0247 | 287.99%         |
+| bleu_1       | model 7 | 0.0085 ± 0.0236     | 0.0212 ± 0.0268        |        0.0127 | 149.43%         |
+| bleu_1       | model 8 | 0.0068 ± 0.0273     | 0.0271 ± 0.0324        |        0.0203 | 298.58%         |
+| bleu_1       | model 9 | 0.0051 ± 0.0169     | 0.0315 ± 0.0346        |        0.0264 | 521.75%         |
+| bleu_2       | model 1 | 0.0015 ± 0.0053     | 0.0110 ± 0.0215        |        0.0094 | 608.61%         |
+| bleu_2       | model 2 | 0.0024 ± 0.0094     | 0.0071 ± 0.0124        |        0.0047 | 193.40%         |
+| bleu_2       | model 3 | 0.0018 ± 0.0078     | 0.0085 ± 0.0190        |        0.0067 | 371.28%         |
+| bleu_2       | model 4 | 0.0015 ± 0.0049     | 0.0095 ± 0.0076        |        0.0079 | 512.33%         |
+| bleu_2       | model 5 | 0.0011 ± 0.0033     | 0.0135 ± 0.0323        |        0.0123 | 1078.20%        |
+| bleu_2       | model 6 | 0.0021 ± 0.0052     | 0.0100 ± 0.0221        |        0.008  | 382.20%         |
+| bleu_2       | model 7 | 0.0022 ± 0.0085     | 0.0049 ± 0.0085        |        0.0027 | 119.50%         |
+| bleu_2       | model 8 | 0.0023 ± 0.0118     | 0.0061 ± 0.0100        |        0.0038 | 162.45%         |
+| bleu_2       | model 9 | 0.0013 ± 0.0041     | 0.0085 ± 0.0143        |        0.0072 | 574.30%         |
+| bleu_3       | model 1 | 0.0010 ± 0.0034     | 0.0065 ± 0.0137        |        0.0055 | 570.11%         |
+| bleu_3       | model 2 | 0.0016 ± 0.0066     | 0.0041 ± 0.0080        |        0.0025 | 153.50%         |
+| bleu_3       | model 3 | 0.0012 ± 0.0062     | 0.0049 ± 0.0132        |        0.0036 | 296.88%         |
+| bleu_3       | model 4 | 0.0009 ± 0.0034     | 0.0040 ± 0.0022        |        0.003  | 321.63%         |
+| bleu_3       | model 5 | 0.0007 ± 0.0020     | 0.0087 ± 0.0229        |        0.008  | 1187.08%        |
+| bleu_3       | model 6 | 0.0013 ± 0.0033     | 0.0063 ± 0.0156        |        0.005  | 385.58%         |
+| bleu_3       | model 7 | 0.0015 ± 0.0069     | 0.0028 ± 0.0054        |        0.0012 | 80.62%          |
+| bleu_3       | model 8 | 0.0012 ± 0.0050     | 0.0032 ± 0.0052        |        0.002  | 168.05%         |
+| bleu_3       | model 9 | 0.0008 ± 0.0026     | 0.0043 ± 0.0080        |        0.0036 | 464.33%         |
+| bleu_4       | model 1 | 0.0007 ± 0.0027     | 0.0037 ± 0.0075        |        0.0029 | 394.35%         |
+| bleu_4       | model 2 | 0.0011 ± 0.0039     | 0.0023 ± 0.0040        |        0.0013 | 120.05%         |
+| bleu_4       | model 3 | 0.0011 ± 0.0064     | 0.0031 ± 0.0095        |        0.002  | 185.31%         |
+| bleu_4       | model 4 | 0.0007 ± 0.0029     | 0.0024 ± 0.0011        |        0.0017 | 233.47%         |
+| bleu_4       | model 5 | 0.0005 ± 0.0016     | 0.0046 ± 0.0109        |        0.0041 | 796.33%         |
+| bleu_4       | model 6 | 0.0009 ± 0.0024     | 0.0039 ± 0.0106        |        0.003  | 319.21%         |
+| bleu_4       | model 7 | 0.0012 ± 0.0057     | 0.0017 ± 0.0025        |        0.0005 | 38.63%          |
+| bleu_4       | model 8 | 0.0008 ± 0.0031     | 0.0021 ± 0.0031        |        0.0013 | 166.68%         |
+| bleu_4       | model 9 | 0.0006 ± 0.0021     | 0.0025 ± 0.0038        |        0.0019 | 329.71%         |
+| meteor       | model 1 | 0.0107 ± 0.0181     | 0.0319 ± 0.0324        |        0.0211 | 196.89%         |
+| meteor       | model 2 | 0.0122 ± 0.0212     | 0.0278 ± 0.0319        |        0.0156 | 127.53%         |
+| meteor       | model 3 | 0.0112 ± 0.0205     | 0.0273 ± 0.0302        |        0.016  | 142.81%         |
+| meteor       | model 4 | 0.0119 ± 0.0171     | 0.0615 ± 0.0237        |        0.0497 | 418.60%         |
+| meteor       | model 5 | 0.0116 ± 0.0167     | 0.0332 ± 0.0438        |        0.0216 | 186.39%         |
+| meteor       | model 6 | 0.0113 ± 0.0160     | 0.0338 ± 0.0399        |        0.0225 | 199.35%         |
+| meteor       | model 7 | 0.0138 ± 0.0225     | 0.0244 ± 0.0249        |        0.0107 | 77.43%          |
+| meteor       | model 8 | 0.0102 ± 0.0197     | 0.0267 ± 0.0279        |        0.0165 | 161.14%         |
+| meteor       | model 9 | 0.0095 ± 0.0141     | 0.0279 ± 0.0284        |        0.0183 | 192.37%         |
+| cosine_sim   | model 1 | 0.2478 ± 0.1663     | 0.3276 ± 0.1585        |        0.0799 | 32.23%          |
+| cosine_sim   | model 2 | 0.2501 ± 0.1555     | 0.3184 ± 0.1516        |        0.0683 | 27.29%          |
+| cosine_sim   | model 3 | 0.2479 ± 0.1510     | 0.3303 ± 0.1570        |        0.0824 | 33.23%          |
+| cosine_sim   | model 4 | 0.2492 ± 0.1608     | 0.3937 ± 0.1396        |        0.1445 | 57.98%          |
+| cosine_sim   | model 5 | 0.2523 ± 0.1350     | 0.3152 ± 0.1638        |        0.063  | 24.95%          |
+| cosine_sim   | model 6 | 0.2437 ± 0.1618     | 0.3336 ± 0.1525        |        0.0899 | 36.87%          |
+| cosine_sim   | model 7 | 0.2632 ± 0.1586     | 0.2739 ± 0.1360        |        0.0107 | 4.05%           |
+| cosine_sim   | model 8 | 0.2452 ± 0.1559     | 0.3266 ± 0.1325        |        0.0814 | 33.18%          |
+| cosine_sim   | model 9 | 0.2293 ± 0.1558     | 0.3153 ± 0.1375        |        0.086  | 37.51%          |
+| semantic_sim | model 1 | 0.6239 ± 0.0832     | 0.6638 ± 0.0793        |        0.0399 | 6.40%           |
+| semantic_sim | model 2 | 0.6251 ± 0.0777     | 0.6592 ± 0.0758        |        0.0341 | 5.46%           |
+| semantic_sim | model 3 | 0.6240 ± 0.0755     | 0.6651 ± 0.0785        |        0.0412 | 6.60%           |
+| semantic_sim | model 4 | 0.6246 ± 0.0804     | 0.6968 ± 0.0698        |        0.0722 | 11.57%          |
+| semantic_sim | model 5 | 0.6261 ± 0.0675     | 0.6576 ± 0.0819        |        0.0315 | 5.03%           |
+| semantic_sim | model 6 | 0.6219 ± 0.0809     | 0.6668 ± 0.0762        |        0.0449 | 7.22%           |
+| semantic_sim | model 7 | 0.6316 ± 0.0793     | 0.6369 ± 0.0680        |        0.0053 | 0.84%           |
+| semantic_sim | model 8 | 0.6226 ± 0.0779     | 0.6633 ± 0.0662        |        0.0407 | 6.53%           |
+| semantic_sim | model 9 | 0.6146 ± 0.0779     | 0.6577 ± 0.0688        |        0.043  | 7.00%           |
+</div>
+
+<br />
 
 ## conclusions
 
-As we can see up there, PEFT *does* work in the usecase of cross-lingual transfer learning of a generative LLM. However,
+As we can see up there, PEFT *does* work in the usecase of cross-lingual transfer learning of a generative LLM. However, as per the discussion section, there does need to be some degree of adjusting one's expectations when it comes down to the resulting performance which one could get out of the training regimen.
 
-# future works
+The application of unrelated external adapter weights into a model often incurs some level of domain loss, this is due to the fact that the newly added weights won't have connections which have weights already adapted with the rest of the network. If , and we believe that some of the abnormalities observed within our results reflected at least part of that.
 
-From here, we do suggest further exploration in the increase of 
+In practice, we do have to consider also the fact that if a model barely had any data to transfer with to begin with, the small number of added trainable parameters from the LoRA often won't be able to shift the underlying lingustic understanding distribution far enough to properly transfer its knowledge over. 
+
+# future explorations
+
+From here, we do suggest further exploration in the increase of sample size, and perhaps better sampling strategies. A possible exploration direction is to use a diversity coefficient to determine the optimal number of clusters used, or perhaps also bumping up the adapter size to accomodate more changes to the model itself.
 
 # personal remarks
+
+Honestly, this experiment was fun :p 
+
+... Mmm, okay, tbh I'd wanted better results, but fwiw this is truly *bleeding edge* when it came to language modelling, so really, I never really had much expectation coming in, diffusion models have for the most part been conventionally thought to be inapplicable in production, and yet just a few while bit ago we saw the release of [Mercury](https://www.inceptionlabs.ai/news).
+
+Personally, I think that diffusion models do have some level of merit to them, and I've for the most part gone over the 
+
+Fact of the matter is, I was pretty much completely taken off-guard when my teammates chose this over the other topics I had proposed, 
+
+![The other ideas](./WAnyale.png)
+
+... But honestly? It's fine really, at least, for me it was. I had fun doing it, and both of my friends who helped me on this project are two of my most reliable teammates to date, no part of the project felt like it was some superficial project thing and I honestly felt like it was a pretty awesome experience all in all, we all learned a thing or two `<3`
+
+As for KCVanguard, the whole entire thing has been an amazing experience all in all, had a lot of time to invest into interesting experiments, and if you know me, you'd know that I feel most alive when I do these kinds of weird experiments, gets me new knowledge and kinda gives me an avenue to pour that curious mind of mine.
+
+I hope that this project report also was a nice little thing that has also at least added some new knowledge to your noggin of yours and you *also* learned a thing or two OwO
+
+Sincerely,  
+—kek 💖
 
 ----
 
