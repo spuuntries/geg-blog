@@ -28,7 +28,7 @@ When we talk about generative language modelling—— speaking of which, I high
 
 This is because the model that we use in this space, generative language modelling, are `decoder-only` models. Where they're only using the decoder component of a traditional transformer `encoder-decoder` architecture (where, if you're familiar w/ that infamous "Attention Is All You Need" [@NIPS2017_3f5ee243] paper? Yeah, that's what they proposed in there). 
 
-The reasoning here is that, the decoder is really the only generative part in a model like this, the encoder itself really just provides some level of "residuality" which connects the whole latent w/ the current generational process, but both can, in a way, be used to model the same processes... Mmm... man my brain b wacky todat... we're getting sidetracked, anyway, we'll come back to this down below, this is a bit of a spoilers.
+The reasoning here is that, the decoder is really the only generative part in a model like this, the encoder itself really just provides some level of "residuality" which connects the whole latent w/ the current generational process, but both can, in a way, be used to model the same processes... Mmm... man my brain b wacky today... we're getting sidetracked, anyway, we'll come back to this down below, this is a bit of a spoilers.
 
 Anywho, "autoregressively" as in? Well, to make it quick for you, here's a demo I had before (do ignore the sample lmoa), try hovering over each word:  
 
