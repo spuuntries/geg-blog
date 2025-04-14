@@ -19,6 +19,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeCitation from 'rehype-citation'
 import rehypeFigure from '@microflash/rehype-figure'
 import sectionize from '@hbsnow/rehype-sectionize'
+import { mermaid } from './monkey/plugins/remark-mermaid'
 import icon from 'astro-icon'
 import path from 'path'
 
@@ -76,7 +77,7 @@ export default defineConfig({
         },
       ],
     ],
-    remarkPlugins: [remarkGfm, remarkToc, remarkMath, remarkEmoji],
+    remarkPlugins: [remarkGfm, remarkToc, mermaid, remarkMath, remarkEmoji],
   },
   server: {
     port: 1234,
