@@ -396,6 +396,8 @@ Now, how does this tie into how we do it for this? Well, think of it like this, 
 
 That is, a way to probabilistically store that "thinking" of yours way ahead. IRL, it's more often than not, that, you don't, like, write or talk, in a way that, you put some "waypoint" words somewhere in the middle at the end of the text and write your way there. You write *somewhere*, to a *conceptual* waypoint. It's still there, it's just not tangible yet.
 
+Soooo, LlaDA, while it does have the capability of doing the above (and it *does*, given certain inputs, sometimes!), in practice, you'll see it still do whatever is most convenient to work with in the language's domain.
+
 A nice possible upside to doing modelling like this, is that the loss of forward dependency in autoregressive models have basically led models to fail during Chain-of-Thoughts (CoT) [@NEURIPS2022_9d560961] once it's committed to a single wrong step in the flow to an answer (as every $x_i$ depends on $x_{i-1}$), can be inhibited, without having to introduce an intermediary state to "interrupt" the model's thinking process (a la modern thinking models like Deepseek's R1 [@deepseekai2025deepseekr1incentivizingreasoningcapability]), or having to aggregate (a la Self-Consistency [@wang2023selfconsistency]), it inherently holds an understanding of what it'll do in the future and can inhibit itself as it decodes the window.
 
 # transfer learning
