@@ -170,7 +170,7 @@ So this is basically what we needed! We can reframe the window we need to predic
 
 OMG Wait, "brain confus"? "Wtf, how u got there, you movin too fast"? Yeah I feel you, me tryna cut time man, ain't no one reading this whole thing, we haven't even gotten to the training process. :pepehands: 
 
-### diffusion language modelling?
+### diffusion language modelling? (DLM)
 
 Anyway, well, here's how we can view this. Think about it like this, say given the input of 
 
@@ -204,7 +204,183 @@ In order to allow for the described behaviour above, during pretraining, we "mas
 
 During inference, the "unmasking" process here, is really just that the allocated "budget" tokens are all masked tokens, where the ones actually processed for decoding are the ones "unmasked", some top $k$ prediction logits (where they're most certain) are unmasked, where the rest are "re-masked" for future timesteps. 
 
-This means that LlaDA, essentially, almost basically just functions as an encoder model, where the self-attn processed is a full sequence-to-sequence self-attn computation. *This* is what allows that forward dependency.
+To be clear, I *am* skipping a couple caveats here, you can understand the generational process better if you check out the following code I derived from their demo:  
+<div style="overflow: scroll; height: 400px">
+```py
+def generate_with_llada(
+    model,
+    tokenizer,
+    prompt,
+    gen_length=64,
+    steps=32,
+    temperature=0.5,
+    cfg_scale=0.0,
+    block_length=32,
+    remasking='low_confidence',
+    constraints=None,
+    device='cuda'
+):
+    """
+    Generate text using a trained LLaDA model.
+
+    Args:
+        model: The trained model
+        tokenizer: The model's tokenizer
+        prompt: Input text prompt
+        gen_length: Length of text to generate
+        steps: Number of denoising steps
+        temperature: Sampling temperature (0.0 = deterministic)
+        cfg_scale: Classifier-free guidance scale
+        block_length: Block length for semi-autoregressive generation
+        remasking: Remasking strategy ('low_confidence' or 'random')
+        constraints: Dict of {position: word} constraints
+        device: Device to run generation on
+
+    Returns:
+        Generated text
+    """
+    MASK_ID = 126336  # LLaDA's mask token ID
+
+    # Process constraints
+    if constraints is None:
+        constraints = {}
+
+    # Convert string constraints to token IDs
+    processed_constraints = {}
+    for pos, word in constraints.items():
+        tokens = tokenizer.encode(" " + word, add_special_tokens=False)
+        for i, token_id in enumerate(tokens):
+            processed_constraints[pos + i] = token_id
+
+    # Encode input prompt
+    input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
+    prompt_length = input_ids.shape[1]
+
+    # Initialize sequence with masks for the response
+    x = torch.full((1, prompt_length + gen_length), MASK_ID, dtype=torch.long).to(device)
+    x[:, :prompt_length] = input_ids.clone()
+
+    # Apply initial constraints
+    for pos, token_id in processed_constraints.items():
+        absolute_pos = prompt_length + pos
+        if absolute_pos < x.shape[1]:
+            x[:, absolute_pos] = token_id
+
+    # Mark prompt positions for CFG
+    prompt_index = (x != MASK_ID)
+
+    # Calculate blocks
+    block_length = min(block_length, gen_length)
+    num_blocks = (gen_length + block_length - 1) // block_length
+    steps_per_block = max(1, steps // num_blocks)
+
+    # Process each block
+    for num_block in range(num_blocks):
+        block_start = prompt_length + num_block * block_length
+        block_end = min(prompt_length + (num_block + 1) * block_length, x.shape[1])
+
+        block_mask_index = (x[:, block_start:block_end] == MASK_ID)
+        if not block_mask_index.any():
+            continue
+
+        # Calculate tokens to unmask per step
+        mask_count = block_mask_index.sum(dim=1, keepdim=True)
+        base_tokens = mask_count // steps_per_block
+        remainder = mask_count % steps_per_block
+        num_transfer_tokens = torch.zeros(mask_count.size(0), steps_per_block, device=device, dtype=torch.int64) + base_tokens
+        num_transfer_tokens[:, :remainder] += 1
+
+        # Process each step
+        for i in range(steps_per_block):
+            mask_index = (x == MASK_ID)
+            if not mask_index.any():
+                break
+
+            # Apply CFG if enabled
+            if cfg_scale > 0.0:
+                un_x = x.clone()
+                un_x[prompt_index] = MASK_ID
+                x_ = torch.cat([x, un_x], dim=0)
+                logits = model(x_).logits
+                logits, un_logits = torch.chunk(logits, 2, dim=0)
+                logits = un_logits + (cfg_scale + 1) * (logits - un_logits)
+            else:
+                logits = model(x).logits
+
+            # Apply temperature and get predictions
+            if temperature > 0:
+                logits = logits.to(torch.float64)
+                noise = torch.rand_like(logits, dtype=torch.float64)
+                gumbel_noise = (-torch.log(noise)) ** temperature
+                logits = logits.exp() / gumbel_noise
+
+            x0 = torch.argmax(logits, dim=-1)
+
+            # Calculate confidence scores
+            if remasking == 'low_confidence':
+                p = F.softmax(logits.to(torch.float64), dim=-1)
+                x0_p = torch.gather(p, -1, x0.unsqueeze(-1)).squeeze(-1)
+            else:  # random
+                x0_p = torch.rand(x0.shape, device=device)
+
+            # Don't consider positions beyond current block
+            x0_p[:, block_end:] = float('-inf')
+
+            # Apply predictions to masked positions
+            x0 = torch.where(mask_index, x0, x)
+            confidence = torch.where(mask_index, x0_p, torch.tensor(float('-inf')).to(device))
+
+            # Select tokens to unmask
+            transfer_index = torch.zeros_like(x0, dtype=torch.bool)
+            for j in range(confidence.shape[0]):
+                block_confidence = confidence[j, block_start:block_end]
+                if i < steps_per_block - 1:
+                    _, indices = torch.topk(block_confidence,
+                                         k=min(num_transfer_tokens[j, i].item(), block_confidence.numel()))
+                    transfer_index[j, indices + block_start] = True
+                else:
+                    transfer_index[j, block_start:block_end] = mask_index[j, block_start:block_end]
+
+            # Update sequence
+            x = torch.where(transfer_index, x0, x)
+
+            # Maintain constraints
+            for pos, token_id in processed_constraints.items():
+                absolute_pos = prompt_length + pos
+                if absolute_pos < x.shape[1]:
+                    x[:, absolute_pos] = token_id
+
+    # Decode final text
+    generated = tokenizer.decode(x[0, prompt_length:], skip_special_tokens=True)
+    return generated
+```
+</div>
+
+If you look at the above, you'll notice that, this... isn't "parallelized"... entirely. I.e.? Well, see how there's `block_size` in there? Yeah, what *is* that? Well, you see, in *theory*, we'd want to process the entire sequence's attention in parallel, correct? 
+
+... Well, problem. $O(N^2)$ bb, it's still there.
+
+If we were to compute the entire sequence's attn for the masked budget as well, that's the whole thing <u>all, at, once.</u> Bad, really bad. It's like each step you take is the whole sequence shoved in there again lol. 
+
+> (Ofc you can somewhat KV cache this I'm p sure, but their implementation, since it's just proving that DLMs work, is not compat w/ KV caching, not to mention that I think if you were to think abt it, the attn could end up invalidating itself since the input window is changed (? I.e., once you've chosen some k tokens, it's like, a diff sequence? Handwavy ig, but ygwim, right?) but I'm spiralling.)
+
+Soooooo, instead, we process the budget window in blocks. These "blocks", are what's processed in "parallel". In effect, this turns LlaDA into a "semi-autoregressive" model, since the "denoising" (full self-attn) occurs not on the entire allocated budget, but *just* for each block.
+
+Anyway, with the above, this means that LlaDA, essentially, in practice, basically just functions as an encoder model, where the self-attn processed is a full sequence-to-sequence self-attn computation (regardless of the block-wise processing, we're still doing full self-attn for each block, yknow). *This* is what allows that forward dependency.
+
+... You may have a *liiiiittle* interesting question in the back of your mind now, "wait, so we'll see that the tokens are decoded in parallel?" GOOD QUESTION! Well, not necessarily. 
+
+Mmmm, well here's the thing, when we say that the markovian way of doing $P(X_i|X_{i-1})$ (i.e., collapsing the autoregression into it) is "flawed", it doesn't necessarily imply that it, therefore, just won't work, for language modelling. It *does* work, and we talk from left-to-right, there's nothing... inherently wrong, with that. The problem, arises from the fact that *conceptually*, we do ***not*** think, left-to-right (or whatever directionality your language goes). 
+
+Thoughts— and this gets a bit conceptually handwavy— *don't* have a direction. It's a high-dimensionality space. Concepts *can* be "reduced" into words, but you're otherwise going to lose some degree of semantical fidelity when you collapse the latent into tangibility.
+
+![this is fine!](./thisisfine.png)
+
+The "flaw" in autoregressive modelling, therefore, is **not** in the fact that we're structuring outputs left-to-right. In fact, this is fine, this is literally how it's supposed to be done, your tangible outputs must match the domain's space. We literally write left-to-right (or, er, again, wherever tf it goes). 
+
+It's just that, we don't *think* left-to-right. We don't create context only on the left side, it can be on the right as well, just that maybe, sometimes, we need to *bridge* to it, maybe it's a bit too fuzzy and we need to refine the left-hand side first before getting the right on more solid ground, maybe it's pretty solid already but you just haven't "infilled" the rest of the text. Regardless, the right-hand side *is* there, it's just, it might not be visible to the other side, your audience.
+
+Now, how does this tie into how we do it for this? Well, think of it like this, you shove your "thinking", into the masked tokens. While the masked tokens *are* still "masked", in practice, the *do* serve a purpose, that is, a way to probabilistically store that "thinking" of yours way ahead. In practice, it's more often than not, that, you don't, like, write or talk, in a way that, you put some "waypoint" words somewhere in the middle at the end of the text and write your way there, you write *somewhere*, to a *conceptual* waypoint. It's still there, it's just not tangible yet.
 
 A nice possible upside to doing modelling like this, is that the loss of forward dependency in autoregressive models have basically led models to fail during Chain-of-Thoughts (CoT) [@NEURIPS2022_9d560961] once it's committed to a single wrong step in the flow to an answer (as every $x_i$ depends on $x_{i-1}$), can be inhibited, without having to introduce an intermediary state to "interrupt" the model's thinking process (a la modern thinking models like Deepseek's R1 [@deepseekai2025deepseekr1incentivizingreasoningcapability]), or having to aggregate (a la Self-Consistency [@wang2023selfconsistency]), it inherently holds an understanding of what it'll do in the future and can inhibit itself as it decodes the window.
 
@@ -474,7 +650,37 @@ This can be more visibly seen when we consider the cosine similarity of the adap
 
 ![Cosine Box](./cosine-box.png)
 
-Based on the above considerations, we picked out **adapter 1** and **adapter 5** as the two adapters which we believe performed the best with respect to its statistical deviance, the two does show some higher level of stability in practical testing, and all in all they both stayed relatively coherent.
+
+Looking around, we believe that the models which exhibited good increase in performance, while still maintaining its stability were the adapters `adapter 1` and `adapter 5`.
+
+
+To further illustrate the above conclusions, here, I took three outputs, 1 from baseline, 2 from `adapter 5`, and 3 from `adapter 1`, given the following prompt, with `temp=0.5`, `len=64`, `block_size=32`,
+```code
+<|startoftext|><|start_header_id|>system<|end_header_id|>
+
+Asisten adalah chatbot bernama Anita, seorang chatbot yang ramah.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Jelaskan tentang machine learning.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+```
+
+Baseline:
+```code
+Machine learning adalah teknologi informasi yang memungkinkan komputer untuk memastik secara otomatis dari informasi yang digambil dan mengembangkan keberhasilan yang terbaik dengan merediksi informasi yang tersedia.
+```
+
+Adapter 5:
+```code
+Machine Learning adalah algoritma yang memboleh komputer untuk memperoleh informasi dengan melakukan operasi pada suatu data yang diberikan. Algoritma menyembahkan data untuk mendapatkan kesimpanan yang membantu komputer
+```
+
+Adapter 1:
+```code
+Machine learning adalah pengembangan sistem komputer yang menggunakan algoritma untuk menyelesaikan problem. Algoritma dapat menggunakan data yang diinputkan untuk menyelesaikan masalah yang diperlukan.User: Coba
+```
+
+You can see that while the baseline's was alrd pretty coherent, the resulting "vibe" ("fluency?" *cough*) of the model is much better on the adapters. In fact, imho adapter 1 ended up much better fact-wise compared to the other two. Baseline made typos and idt was as coherent as the other two, it had the most of that funni GPT-2/DialoGPT/Blenderbot vibes from way a yonders if you rember those times.
+
+Thus, based on the above considerations, we picked out **adapter 1** and **adapter 5** as the two adapters which we believe performed the best with respect to its statistical deviance, the two does show some higher level of stability in practical testing, and all in all they both stayed relatively coherent.
 
 Here are the results tabulated btw:  
 
@@ -579,7 +785,7 @@ Here are the results tabulated btw:
 
 As we can see up there, PEFT *does* work in the usecase of cross-lingual transfer learning of a generative LLM. However, as per the discussion section, there does need to be some degree of adjusting one's expectations when it comes down to the resulting performance which one could get out of the training regimen.
 
-The application of unrelated external adapter weights into a model often incurs some level of domain loss, this is due to the fact that the newly added weights won't have connections which have weights already adapted with the rest of the network. If , and we believe that some of the abnormalities observed within our results reflected at least part of that.
+The application of unrelated external adapter weights into a model often incurs some level of domain loss, this is due to the fact that the newly added weights won't have connections which have weights already adapted with the rest of the network. If the rest of the network alrd had some level of preconveived "notions" which can't be changed with the added parameters, the addition of the parameters may only inhibit the general performance of the model, and we believe that some of the abnormalities observed within our results reflected at least part of that.
 
 In practice, we do have to consider also the fact that if a model barely had any data to transfer with to begin with, the small number of added trainable parameters from the LoRA often won't be able to shift the underlying lingustic understanding distribution far enough to properly transfer its knowledge over. 
 
