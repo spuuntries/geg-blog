@@ -35,6 +35,8 @@ export const mermaid: RemarkPlugin<[]> = () => (tree) => {
           <span>.</span>
           <span>.</span>
         </div>
+        <br/>
+        <div><p>(Reload if the mermaid doesn't show up.)</p></div>
       </div>
     `
   })
