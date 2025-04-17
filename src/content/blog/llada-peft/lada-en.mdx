@@ -374,9 +374,21 @@ Mmmm, well here's the thing, when we say that the markovian way of doing $P(X_i|
 
 Thoughts— and this gets a bit conceptually handwavy— *don't* have a direction. It's a high-dimensionality space. Concepts *can* be "reduced" into words, but you're otherwise going to lose some degree of semantical fidelity when you collapse the latent into tangibility.
 
+Think of the following image.
+
 ![this is fine!](./thisisfine.png)
 
-The "flaw" in autoregressive modelling, therefore, is **not** in the fact that we're structuring outputs left-to-right. In fact, this is fine, this is literally how it's supposed to be done, your tangible outputs must match the domain's space. We literally write left-to-right (or, er, again, wherever tf it goes). 
+You can caption it as something like: 
+```py
+'''
+The image depicts a cartoon scene of a dog sitting on a red chair in a room filled with flames. The dog is wearing a hat and has a speech bubble that says "This is fine". A small table with a yellow mug on it is situated next to the dog. The room is filled with flames, creating a chaotic and intense atmosphere. The dog's expression appears to be one of confusion or bewilderment.
+'''
+# (captioned w/ moondream btw)
+``` 
+
+But you won't be able to capture the degree of "yellowness" which the mug has, or what shape the dog was, or how "red" that chair was. You can only describe them in *discrete* descriptors. This is the inherent limitation, not in language modelling, but **language** itself. You *must* collapse conceptuality into tangibility when reducing the latent into describable words.
+
+The "flaw" in autoregressive modelling, therefore, is **not** in the fact that we're structuring outputs left-to-right. In fact, <u>this is fine</u>, this is literally how it's supposed to be done, your tangible outputs must match the domain's space. We literally write left-to-right (or, er, again, wherever tf it goes). 
 
 It's just that, we don't *think* left-to-right. We don't create context only on the left side, it can be on the right as well, just that maybe, sometimes, we need to *bridge* to it, maybe it's a bit too fuzzy and we need to refine the left-hand side first before getting the right on more solid ground, maybe it's pretty solid already but you just haven't "infilled" the rest of the text. Regardless, the right-hand side *is* there, it's just, it might not be visible to the other side, your audience.
 
