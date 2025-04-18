@@ -93,7 +93,7 @@ You may be asking.
 
 ... well, for one, honestly? Nothing. 
 
-Again, this is just one of the ways we can model language, and as with most things relating to the idea of modelling a phenomena in science, nothing is necessarily, inherently, "wrong", in modelling something. 
+Again, this is just one of the ways we can model language, and as with most things relating to the idea of modelling a phenomenon in science, nothing is necessarily, inherently, "wrong", in modelling something. 
 
 It's really just all about what evidence there is to back each modelling approach, and how well and intuitively it "clicks" with the interpretation of the domain itself.
 
@@ -520,6 +520,9 @@ To make it work with LlaDA, we shoved it thru some prepro to ensure that the for
 ### **1. ShareGPT Formatting**
 
 ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function, we also run it thru Unsloth's formatter just to make sure.
+```py
+
+
 Essentially, it goes smth like from this
 ```py
 {'dataset_name': 'nusa_t2t_v2',
