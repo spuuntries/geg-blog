@@ -529,7 +529,23 @@ To make it work with LlaDA, we shoved it thru some prepro to ensure that the for
 
 ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function, we also run it thru Unsloth's formatter just to make sure.
 ```py
+#@markdown Util functions
+def convert_to_conversations_batched(examples):
+    conversations = [
+        [
+            {"role": "user", "content": input_text},
+            {"role": "assistant", "content": output_text}
+        ]
+        for input_text, output_text in zip(examples["input"], examples["output"])
+    ]
 
+    return {"conversations": conversations}
+
+def check_valid_conversations(examples):
+    # examples is a dict with batched features
+    return [all(msg["content"] is not None for msg in conv)
+            for conv in examples["conversations"]]
+```
 
 Essentially, it goes smth like from this
 ```py
