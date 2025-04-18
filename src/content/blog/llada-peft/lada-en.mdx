@@ -107,6 +107,10 @@ Let's go over a nice little "example", it's a bit handwavy, but def not a first 
 
 ... say— mmmh... ykno what I'm just gonna copy over my thing from the notebook— 
 
+>Say we took some sequence of words, and we try to compute the relationships of words with one another.
+> 
+> `I ate lamb for breakfast today. It was delicious.`
+>
 > if we'd used self-attention (assuming the most textbook implementation of this, not assuming sparsity, or flash attention, yadda yadda), the idea was that each of the words compute their "relationship" scores (i.e., attention score) with respect to one another and themselves.  
 > 
 > Why? A neat visual I had a while ago that I thought up of was the use case for coref resolution. If we'd used the above sentence, here's what we might see, say we omit the words which has the lower end of the scores, and then highlighting the `lamb`'s computed scores, we'll see that
