@@ -527,7 +527,7 @@ To make it work with LlaDA, we shoved it thru some prepro to ensure that the for
 
 ### **1. ShareGPT Formatting**
 
-ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function, we also run it thru Unsloth's formatter just to make sure.
+ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function.
 ```py
 #@markdown Util functions
 def convert_to_conversations_batched(examples):
