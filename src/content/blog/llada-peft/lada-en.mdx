@@ -529,7 +529,7 @@ To make it work with LlaDA, we shoved it thru some prepro to ensure that the for
 
 ### **1. ShareGPT Formatting**
 
-ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function, we also run it thru Unsloth's formatter just to make sure.
+ShareGPT is a common format (it's kinda a general description of a set which uses "role" and "content" as keys) used in instruction training, here's our formatter function.
 ```py
 #@markdown Util functions
 def convert_to_conversations_batched(examples):
@@ -621,10 +621,10 @@ This is also to follow the SFT schema provided by the LlaDA authors, where the "
 In order to evaluate the performance of the model before and after the application of the adapters, we used 4 metrics, ROUGE, BLEU, METEOR, and F1.
 
 Here:
-1. ROUGE is used to evaluate the recall capabilities of the model, this is measured via the overlap between the reference and the generated texts. Wud be most useful wen we wanna consider using this for RAG, for example. ROUGE has three different types, `-1`, `-2` and `-L` depending on what's used to determine the overlap.
-2. BLEU is used to determine the quality of the cross-lingual transfer, this is based on the gram overlap and the brevity of the generated text. This is to understand how well the grams now overlap within the vocab understanding of the model.
-3. METEOR is really just a modernized version of BLEU, gets a harmonic mean of precision and recall of the gram overlap, so it's like a compromise between the other two up there.
-4. F1 here is calculated via embedding w/ `all-MiniLM-L6-v2`, where for something to be determined to be true, we grab the cosine dist from the reference's embedding for the generated text, and if it passes the threshold of 0.5, it's determined to be true.
+1. ROUGE is used to evaluate the recall capabilities of the model, this is measured via the overlap between the reference and the generated texts. Wud be most useful wen we wanna consider using this for RAG, for example. ROUGE has three different types, `-1`, `-2` and `-L` depending on what's used to determine the overlap.  
+2. BLEU is used to determine the quality of the cross-lingual transfer, this is based on how well the grams match up and the brevity of the generated text. Such, if the model gets high BLEU, that means it's learned the language's syntax and verbosity better.  
+3. METEOR is really just a modernized version of BLEU, gets a harmonic mean of precision and recall of the gram , so it's like a compromise between the other two up there.  
+4. F1 here is calculated via embedding w/ `all-MiniLM-L6-v2`, where for something to be determined to be true, we grab the cosine dist from the reference's embedding for the generated text, and if it passes the threshold of 0.5, it's determined to be true.  
 
 For all of them, we assumed a 0.7 temperature on the sampling over each probdist, and 32 timestep diffusion.
 
