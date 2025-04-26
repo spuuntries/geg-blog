@@ -56,7 +56,7 @@ Positions:    [0,    1,    2,    3,     4,    5,    6]
 Tokens:      ["I", "love", "femboys", "->", "J'", "aime", "les"]
 ```
 
-To predict, we do the attn computation on some "hypothetical" placeholder token at position 7, with self-attn relationship computed with respect to tokens 0-6 (and ofc, itself). 
+To predict some token at position 7, we run a self-attn relationship computation to tokens 0-6 (and ofc, themselves for each).
 
 ```mermaid
 graph TD
@@ -75,7 +75,7 @@ graph TD
 ```
 <figcaption>So from hidden dims of the latent, it goes into an FC (a linear layer), so we have output logits at vocab_len dims, then a normalization layer</figcaption>
 
-After which, as you can see up there, it's shoved into an FC head at size of the vocab, which then gets logits, then softmax (or some other normalization shid you got) to get the probdist. ...So smth like:  
+After which, as you can see up there, it's (the latest latent state) shoved into an FC head at size of the vocab, which then gets logits, then softmax (or some other normalization shid you got) to get the probdist. ...So smth like:  
 
 ```py
 {
