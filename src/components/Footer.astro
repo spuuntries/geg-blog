@@ -30,40 +30,44 @@ import SocialIcons from './SocialIcons.astro'
   </Container>
 </footer>
 
+<script>
+  // Credit to https://github.com/paularmstrong/onerepo
 
-<script>	
-// Credit to https://github.com/paularmstrong/onerepo
-
-/**
-  * @params {HTMLCollectionOf<HTMLElement>} graphs
-  */
- async function renderDiagrams(graphs: HTMLCollection) {
+  /**
+   * @params {HTMLCollectionOf<HTMLElement>} graphs
+   */
+  async function renderDiagrams(graphs: HTMLCollection) {
     // @ts-ignore
-   const { default: mermaid } = await import('mermaid'); 
-   mermaid.initialize({
-     startOnLoad: false,
-     fontFamily: 'var(--sans-font)',
-     // @ts-ignore This works, but TS expects a enum for some reason
-     theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default',
-   });
+    const { default: mermaid } = await import('mermaid')
+    mermaid.initialize({
+      startOnLoad: false,
+      fontFamily: 'var(--sans-font)',
+      // @ts-ignore This works, but TS expects a enum for some reason
+      theme:
+        document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default',
+    })
 
-   for (const graph of Array.from(graphs)) {
-     const content = graph.getAttribute('data-content');
-     if (!content) {
-       continue;
-     }
-     const svg = document.createElement('svg');
-     svg.id = 'mermaid-' + Math.round(Math.random() * 100000);
-     graph.appendChild(svg);
-     // @ts-ignore
-     mermaid.render(svg.id, content.replace(/(%0A)+/g, '\n')).then((result) => {
-       graph.innerHTML = result.svg;
-     });
-   }
- }
+    for (const graph of Array.from(graphs)) {
+      const content = graph.getAttribute('data-content')
+      if (!content) {
+        continue
+      }
+      const svg = document.createElement('svg')
+      svg.id = 'mermaid-' + Math.round(Math.random() * 100000)
+      graph.appendChild(svg)
+      // @ts-ignore
+      mermaid
+        .render(svg.id, content.replace(/(%0A)+/g, '\n'))
+        .then((result) => {
+          graph.innerHTML = result.svg
+        })
+    }
+  }
 
- const graphs = document.getElementsByClassName('mermaid');
- if (document.getElementsByClassName('mermaid').length > 0) {
-   renderDiagrams(graphs);
- }
- </script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const graphs = document.getElementsByClassName('mermaid')
+    if (graphs.length > 0) {
+      renderDiagrams(graphs)
+    }
+  })
+</script>
