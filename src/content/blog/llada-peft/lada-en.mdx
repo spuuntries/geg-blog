@@ -508,7 +508,7 @@ WE'RE FINALLY AT THE ACTUAL THING LMFAO, TOOK A WHILE, BUT WE HERE, FINALLY. ~I'
 
 ## data curation
 
-So to do data curation, we sampled off the Cendol Collections [@cahyawijaya-etal-2024-cendol] dataset, via the following procedure, :  
+So to do data curation, we sampled off the Cendol Collections [@cahyawijaya-etal-2024-cendol] dataset, via the following procedure:  
   1. Grab the subsets of data from Cendol Collection which contains Indonesian only, this includes the following subsets: `indo_puisi, wikihow, wikipedia_id, safety_prompt, identity_prompt, and dolly`.  
 
         The rationale behind this was to accelerate the convergence rate, considering that later on we'll be using LoRA to add additional parameters that won't be able to learn significantly different domains from the base domain (otherwise it'd have to very much overfit), as such Indonesian would be closer to English than, say, Maduranese or Javanese.  
@@ -518,6 +518,8 @@ So to do data curation, we sampled off the Cendol Collections [@cahyawijaya-etal
   
         The rationale behind this was to effectively represent each subset in the next step, as each `template_names` here represent a tighter scope within each subset (i.e., we wanna ensure a wider variability by allowing a more diverse sample set, hence allowing `template_names` as there are more of those).
   3. KMeans cluster the instances by embedding them with `IndoBERT-p1-cased` at K=10, grabbing for each cluster 1,000 samples and augmenting from other clusters if the current cluster has insufficient instances, resulting in a sample size totalling at 10,000 instances.  
+        
+        By doing this, we ensure that for any semantical clusters, there's at least a degree of representation within the training set, this ensures good diversity and higher representation even at a lower scale set.  
 
 
 ![The sampling procedure we did.](./sampling.png)
