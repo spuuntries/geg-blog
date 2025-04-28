@@ -64,10 +64,12 @@ import SocialIcons from './SocialIcons.astro'
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const graphs = document.getElementsByClassName('mermaid')
-    if (graphs.length > 0) {
-      renderDiagrams(graphs)
-    }
+  ;['DOMContentLoaded', 'load'].forEach((event) => {
+    document.addEventListener(event, () => {
+      const graphs = document.getElementsByClassName('mermaid')
+      if (graphs.length > 0) {
+        renderDiagrams(graphs)
+      }
+    })
   })
 </script>
