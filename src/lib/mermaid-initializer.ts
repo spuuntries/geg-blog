@@ -24,11 +24,12 @@ const unescapeHTML = (text: string): string => {
  * Initializes Mermaid diagrams on the page.
  * Finds elements with the class "mermaid", extracts the diagram definition
  * from the "data-content" attribute, unescapes it, and then renders the diagram.
+ * This function is designed to be callable multiple times (e.g., on initial load and after page transitions).
  */
 const initializeMermaid = () => {
-  console.log('Initializing Mermaid diagrams (or re-initializing after page load)...');
+  console.log('Initializing/Re-initializing Mermaid diagrams...');
 
-  // Select all elements with the class "mermaid"
+  // Select all elements with the class "mermaid" currently in the DOM
   const mermaidElements = document.querySelectorAll<HTMLElement>('.mermaid');
 
   if (mermaidElements.length === 0) {
@@ -36,59 +37,62 @@ const initializeMermaid = () => {
     return;
   }
 
+  console.log(`Found ${mermaidElements.length} .mermaid elements.`);
+
   mermaidElements.forEach((element, index) => {
     try {
-      // Retrieve the raw Mermaid diagram definition from the data-content attribute
-      // If data-content is not present, it might have been processed already by a previous run,
-      // or it's a new element that needs processing.
+      // Retrieve the raw Mermaid diagram definition from the data-content attribute.
+      // This attribute is expected to be present for diagrams that haven't been initialized yet.
       const rawDiagramDefinition = element.dataset.content;
 
-      // If there's a definition, process it.
-      // If not, Mermaid.run() might still re-render existing diagrams if they were manipulated by Astro.
       if (rawDiagramDefinition) {
         // Unescape the diagram definition
         const unescapedDiagramDefinition = unescapeHTML(rawDiagramDefinition);
 
-        // Clear the existing inner HTML of the element to prevent duplication
-        // if initializeMermaid is called multiple times on the same static elements (though less likely with Astro)
+        // Clear the existing inner HTML of the element. This is important for re-runs,
+        // ensuring that if Astro replaces the element but keeps the old SVG for a moment,
+        // we definitely replace it with the definition that mermaid.run() will process.
+        // It also ensures that if data-content changes, the old diagram is removed.
         element.innerHTML = '';
 
-        // Set the element's inner HTML to the unescaped Mermaid diagram definition
+        // Set the element's inner HTML to the unescaped Mermaid diagram definition.
         // Mermaid will pick this up when mermaid.run() is called.
         element.innerHTML = unescapedDiagramDefinition;
 
-        // Remove the data-content attribute as it's no longer needed
+        // Remove the data-content attribute as it has now been processed.
+        // This prevents re-processing the same data-content if initializeMermaid is called
+        // again before a page transition that would replace the element.
         element.removeAttribute('data-content');
         console.log(`Prepared Mermaid diagram at index ${index} from data-content.`);
-      } else if (!element.innerHTML.includes('<svg')) {
-        // If no data-content and no SVG, it might be an empty .mermaid div that needs its content (if any was intended)
-        // or it's already processed and just fine.
-        // For safety, we'll log if it's empty and wasn't processed by data-content this run.
-        console.warn(`Mermaid element at index ${index} has no data-content and no existing SVG. Ensure it's correctly set up if it was intended to render.`);
+      } else if (element.innerHTML.trim() === '') {
+        // If there's no data-content and the element is empty, it might be an issue
+        // if this element was expected to render a diagram.
+        // Or, it could be an element that was processed, its SVG removed by a DOM update,
+        // and it's now awaiting re-rendering by mermaid.run() if its definition was already set.
+        console.warn(`Mermaid element at index ${index} has no data-content and is empty. If it was previously rendered, mermaid.run() might attempt to re-render it if its content was set by an earlier call.`);
+      } else {
+        // If no data-content and the element is not empty (e.g., contains an SVG),
+        // mermaid.run() will decide whether to re-render it or skip it.
+        console.log(`Mermaid element at index ${index} has no data-content, assuming it's already processed or will be handled by mermaid.run().`);
       }
-
-
     } catch (error) {
       console.error(`Error processing Mermaid element at index ${index}:`, error);
     }
   });
 
   try {
-    // After processing all elements, call mermaid.run() to render all diagrams
-    // The { nodes } option specifies which elements to render.
-    // This will render newly prepared diagrams and should re-render existing ones if necessary.
-    console.log('Running Mermaid to render/re-render diagrams...');
-    // Explicitly tell mermaid what to render. If elements were already rendered and are still in the DOM,
-    // mermaid.run() might re-process them or skip them if their content hasn't changed in a way it detects.
-    // By clearing and resetting content above from 'data-content', we ensure new/changed ones are processed.
-    mermaid.run({ nodes: Array.from(mermaidElements).filter(el => el.hasAttribute('data-mermaid-processed') === false) });
-
-    // Mark elements as processed to avoid re-processing if not needed by mermaid.run's internal logic
-    mermaidElements.forEach(el => el.setAttribute('data-mermaid-processed', 'true'));
-
+    // After preparing all elements, call mermaid.run() to render all diagrams.
+    // Passing the specific nodes is generally safer and more explicit.
+    // Mermaid.js's run() function is generally idempotent and can be called multiple times.
+    // It should correctly initialize diagrams that have their definition in place
+    // and skip or update already rendered diagrams as appropriate.
+    console.log('Calling mermaid.run() for all .mermaid elements...');
+    mermaid.run({ nodes: mermaidElements });
     console.log('Mermaid diagrams rendered/re-rendered successfully.');
-  } catch (error) {
-    console.error('Error rendering/re-rendering Mermaid diagrams:', error);
+  } catch (error)
+{
+    // Catch errors specifically from mermaid.run()
+    console.error('Error during mermaid.run():', error);
   }
 };
 
