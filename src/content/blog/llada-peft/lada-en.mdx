@@ -416,7 +416,7 @@ A nice possible upside to doing modelling like this, is that the loss of forward
 
 Anyway, for my team's research, we did what's called cross-lingual transfer learning, which, well, honestly, it's in the name, it's the practice of transferring a language model's knowledge on a language such that it'd work better in another language. We did transfer learning from LlaDA's primary domain, that is non-Indonesian language, to Indonesian. 
 
-There's been a good amt of precedence behind this, my previous research for the ML final project, Cendol [@cahyawijaya-etal-2024-cendol], IndoNLP [@winata-etal-2023-nusax] [@aji-etal-2022-one] [@cahyawijaya-etal-2021-indonlg] [@wilie-etal-2020-indonlu], Komodo [@owen2024komodolinguisticexpeditionindonesias], they all describe a need to introduce more linguistical data in Indonesian for better use within said domain. It also comes down a lot to also amending biases with models which are not already well-adapted to Indonesian, where having biases, apart from it not being an ideal thing in language modelling [@10.1145/3677525.3678666] [@10.1145/3652155], also can introduce vulnerabilities when deployed in production (i.e., this is a potential prompt injection vulnerability, among other things [@sheng-etal-2021-societal]).
+There's been a good amt of precedence behind this, my previous research for the ML final project [@kautsar2025transfer], Cendol [@cahyawijaya-etal-2024-cendol], IndoNLP [@winata-etal-2023-nusax] [@aji-etal-2022-one] [@cahyawijaya-etal-2021-indonlg] [@wilie-etal-2020-indonlu], Komodo [@owen2024komodolinguisticexpeditionindonesias], they all describe a need to introduce more linguistical data in Indonesian for better use within said domain. It also comes down a lot to also amending biases with models which are not already well-adapted to Indonesian, where having biases, apart from it not being an ideal thing in language modelling [@10.1145/3677525.3678666] [@10.1145/3652155], also can introduce vulnerabilities when deployed in production (i.e., this is a potential prompt injection vulnerability, among other things [@sheng-etal-2021-societal]).
 
 Anywho, to do this, there are lots of ways, you can add a new head, you can tune an adapter at the input, an encoder, yadda yadda, there's a lot here. But I think one that we're already pretty much familiar with, and is basically probably the first thing that *anyone* would think of first when we do this, is <u>finetuning</u>. 
 
@@ -438,7 +438,7 @@ For time efficiency we're gonna skip a bit, and just say that we're working w/ L
 
 ## LoRA?
 
-Yes, LoRA. Wtf is LoRA? LoRA stands for `Low-Rank Adaptation` [@hu2022lora], which, okay, there's a lot of theory to go over here, but I had from last semester's final project (yeah, the one I mentioned I submitted for publishing from last post, it's at minor revisions stage btw, gona edit this post too if it gets accepted in the future) that explains this pretty well, so I'm just gonna copy off that.
+Yes, LoRA. Wtf is LoRA? LoRA stands for `Low-Rank Adaptation` [@hu2022lora], which, okay, there's a lot of theory to go over here, but I had from last semester's final project[@kautsar2025transfer] ~~(yeah, the one I mentioned I submitted for publishing from last post, it's at minor revisions stage btw, gona edit this post too if it gets accepted in the future)~~ that explains this pretty well, so I'm just gonna copy off that.
 
 > Low-Rank Adaptation (LoRA) was a method introduced by Hu et al. (2022) of Microsoft, which proposes to... well, let's start with the diagram actually, kinda hard to intuit without a visual:  
 >
@@ -527,7 +527,7 @@ So to do data curation, we sampled off the Cendol Collections [@cahyawijaya-etal
 
 ## data prepro
 
-To make it work with LlaDA, we shoved it thru some prepro to ensure that the formatting works out, this is especially because to do the tuning, this is essentially just Supervised Fine Tuning (SFT), and looking at the paper [@nie2025largelanguagediffusionmodels], it looks pretty standard, so we shoved it thru the same prepro as the one we had for the ML final project.
+To make it work with LlaDA, we shoved it thru some prepro to ensure that the formatting works out, this is especially because to do the tuning, this is essentially just Supervised Fine Tuning (SFT), and looking at the paper [@nie2025largelanguagediffusionmodels], it looks pretty standard, so we shoved it thru the same prepro as the one we had for the ML final project [@kautsar2025transfer].
 
 ### **1. ShareGPT Formatting**
 
