@@ -1,0 +1,27 @@
+[
+  {
+    "type": "key-claim",
+    "author": "https://spuun.art",
+    "timestamp": 1786415843140,
+    "seen": [
+      "aa62898243eed9585251900f7be7cc50f977e1a8f0a89079ad5ec847bce5248a"
+    ],
+    "payload": {
+      "pubkey": "cf345e1b68b9bf5de0c1e2cf9d92e2c79827a774891c962aaf81275b0e5e3a42"
+    },
+    "id": "454f9e44f22f4ab3e61b74804495506a3e7cf71e117fd5146d032837d07d18e9",
+    "sig": "1c53c3e360ad468d29ccbcf1c2b9c1d4910e5970a51faa06bba49e1ffb7b39543aa038ed6542e137bbb77bb7aa385a5eba404754a6c8cbb7b2e733b1ee5f3200"
+  },
+  {
+    "type": "genesis",
+    "author": "https://spuun.art",
+    "timestamp": 1786415843139,
+    "seen": [],
+    "payload": {
+      "name": "kek's ring",
+      "inviteBudget": 2
+    },
+    "id": "aa62898243eed9585251900f7be7cc50f977e1a8f0a89079ad5ec847bce5248a",
+    "sig": "dd91988c003c6b6d9d3ea55bdb222eb868875e6118b953ebc029c0ee8a390672f940b99b3909df38b75597ba2a149c72f966118c5dd278574aeab41160d3190f"
+  }
+]
