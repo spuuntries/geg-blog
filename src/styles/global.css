@@ -235,3 +235,37 @@
     }
   }
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .small-scrollbar::-webkit-scrollbar {
+    @apply h-1.5 w-1.5;
+  }
+  .small-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .small-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border/50 hover:bg-border transition-colors;
+  }
+  .small-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border) / 0.5) transparent;
+  }
+
+  .fade-edges-x {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 2rem,
+      black calc(100% - 2rem),
+      transparent
+    );
+  }
+}
