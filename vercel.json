@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/webring.json",
+      "source": "/keks-ring.json",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" }
