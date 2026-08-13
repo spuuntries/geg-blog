@@ -28,6 +28,41 @@
     "sig": "13b773b44091e108e17a039ad82020563c593e579f2744f9a0db24db2f3ea14d24ff6b7043d4b1aa45b8f21a42438e882e7ba85d5f3d28d371a8f06c09d30a0b"
   },
   {
+    "type": "add",
+    "author": "https://spuun.art",
+    "timestamp": 1786617258403,
+    "seen": [
+      "263b54bd6f975f35925c49aa4f43b70b3a7d8a4695e4d800162f476f4465a7d8",
+      "4f8e4d43994ac1f94ffd79ec961eb65f0ccd66779efdb659c4f4038a6db583d2",
+      "9bdd68ca3d681e7e518215fa7707a65e394c0d72f5044097e7aaf3ca686f5955",
+      "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92",
+      "f7e314d642ee6b8d5a8e6434285efa3cb9687747f884a61e82ca2b9e6aeabd50"
+    ],
+    "payload": {
+      "target": "https://imdipo.github.io/",
+      "name": "imdipo"
+    },
+    "id": "85d0ab85437af1b1d694844e4a40d621c97603fcd0261b84deb7085405ad9c6f",
+    "sig": "04ad1c3f62fc0e7fa2b2215ca3736d2c466891fdbf9923b9487dd3e420a265fd3c7d3a3a3d369961cb7bc28bfa3aa76382050ba334d449c943fb10abf61f0403"
+  },
+  {
+    "type": "add",
+    "author": "https://spuun.art",
+    "timestamp": 1786616846596,
+    "seen": [
+      "263b54bd6f975f35925c49aa4f43b70b3a7d8a4695e4d800162f476f4465a7d8",
+      "4f8e4d43994ac1f94ffd79ec961eb65f0ccd66779efdb659c4f4038a6db583d2",
+      "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92",
+      "f7e314d642ee6b8d5a8e6434285efa3cb9687747f884a61e82ca2b9e6aeabd50"
+    ],
+    "payload": {
+      "target": "https://alfi.is-a.dev/",
+      "name": "alfi"
+    },
+    "id": "9bdd68ca3d681e7e518215fa7707a65e394c0d72f5044097e7aaf3ca686f5955",
+    "sig": "6cc456141c459d678e555e599b75dfad92b632117e257ec29ccef9f5c6e966f0221bbdd22afb519b8027c20ceab57c132f48db39ec1288fcd1781cc887a50606"
+  },
+  {
     "type": "genesis",
     "author": "https://spuun.art",
     "timestamp": 1786598614435,
