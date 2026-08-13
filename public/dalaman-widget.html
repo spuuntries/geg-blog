@@ -30,7 +30,7 @@
     <!-- Dynamically inject script to use current hostname as a bootstrap node -->
     <script>
       const s = document.createElement('script');
-      s.src = './index.widget.html';
+      s.src = window.location.href;
       s.setAttribute('data-ring-name', 'dalaman');
       s.setAttribute('data-ring', window.location.origin + ', https://spuun.art');
       document.currentScript.parentNode.insertBefore(s, document.currentScript.nextSibling);
