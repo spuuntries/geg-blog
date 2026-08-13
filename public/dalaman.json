@@ -1,0 +1,58 @@
+[
+  {
+    "type": "add",
+    "author": "https://spuun.art",
+    "timestamp": 1786608222406,
+    "seen": [
+      "4f8e4d43994ac1f94ffd79ec961eb65f0ccd66779efdb659c4f4038a6db583d2",
+      "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92"
+    ],
+    "payload": {
+      "target": "https://gh.spuun.art",
+      "name": "spuun gh pages"
+    },
+    "id": "263b54bd6f975f35925c49aa4f43b70b3a7d8a4695e4d800162f476f4465a7d8",
+    "sig": "2a847b9aa65b8ecd20ae046f033554cdabf5aca54aae5f62262fb6c9a0d7fd73a41b2e5551a691b930fff0d3bc997897626f77a0ef9282e294d6c46ab3e8d10f"
+  },
+  {
+    "type": "key-claim",
+    "author": "https://spuun.art",
+    "timestamp": 1786598614437,
+    "seen": [
+      "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92"
+    ],
+    "payload": {
+      "pubkey": "5ecb9e8d912ebee8730a04465bee9d5528d697b74897221f124d2800d0547c49"
+    },
+    "id": "4f8e4d43994ac1f94ffd79ec961eb65f0ccd66779efdb659c4f4038a6db583d2",
+    "sig": "13b773b44091e108e17a039ad82020563c593e579f2744f9a0db24db2f3ea14d24ff6b7043d4b1aa45b8f21a42438e882e7ba85d5f3d28d371a8f06c09d30a0b"
+  },
+  {
+    "type": "genesis",
+    "author": "https://spuun.art",
+    "timestamp": 1786598614435,
+    "seen": [],
+    "payload": {
+      "name": "dalam(an)",
+      "inviteBudget": 10
+    },
+    "id": "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92",
+    "sig": "778eaf4a54994f76947e4e54be6149e3bd5b353261232dba0a6b0ac4c5eca7c7306bbc8c77608364d98a8499708779166614a7ae49df7ada69cc1063fff27e07"
+  },
+  {
+    "type": "revoke",
+    "author": "https://spuun.art",
+    "timestamp": 1786608324434,
+    "seen": [
+      "263b54bd6f975f35925c49aa4f43b70b3a7d8a4695e4d800162f476f4465a7d8",
+      "4f8e4d43994ac1f94ffd79ec961eb65f0ccd66779efdb659c4f4038a6db583d2",
+      "e860fdbc61c2020e4d469325098f2924764f8fb6ed391acb18335093518cad92"
+    ],
+    "payload": {
+      "target": "https://gh.spuun.art",
+      "reparent": false
+    },
+    "id": "f7e314d642ee6b8d5a8e6434285efa3cb9687747f884a61e82ca2b9e6aeabd50",
+    "sig": "ac3432d0bc7f8100b3f8a0c783c1746180fc29d245038badfa09880d516c0b8e31cb682fb8bf23e20453377a428cd11ed0000f5ece4dc813d6c055375e13c608"
+  }
+]
